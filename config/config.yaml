@@ -1,0 +1,15 @@
+config:
+  credentials:
+    user_agent: ""
+    cookies: ""
+  logging:
+    log_level: "DEBUG" # Change to INFO after testing
+  dirs:
+    log_dir: "logs"
+    data_dir: "data"
+    cache_dir: "cache"
+  features:
+    max_concurrent_requests: 5
+    timeout_between_request: 2 # in seconds
+    timeout_when_error: 30 # in seconds
+    retry_attempts: 3
