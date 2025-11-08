@@ -1,10 +1,319 @@
 import requests
 import json
+import logging
+import sys
+import json
+from pathlib import Path
 
-url = "https://www.olx.ua/apigateway/graphql"
+# Add project root to Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+from config.config import headers, base_url, cache_dir
+from src.tools.logger import setup_logger
+
+# logger = setup_logger()
+url = base_url
+
+# GraphQL запрос для получения списка объявлений
+query = """
+query ListingSearchQuery($searchParameters: [SearchParameter!] = {key: "", value: ""}) {
+  clientCompatibleListings(searchParameters: $searchParameters) {
+    __typename
+    ... on ListingSuccess {
+      __typename
+      data {
+        id
+        location {
+          city {
+            id
+            name
+            normalized_name
+            _nodeId
+          }
+          district {
+            id
+            name
+            normalized_name
+            _nodeId
+          }
+          region {
+            id
+            name
+            normalized_name
+            _nodeId
+          }
+        }
+        last_refresh_time
+        delivery {
+          rock {
+            active
+            mode
+            offer_id
+          }
+        }
+        created_time
+        category {
+          id
+          type
+          _nodeId
+        }
+        contact {
+          courier
+          chat
+          name
+          negotiation
+          phone
+        }
+        business
+        omnibus_pushup_time
+        photos {
+          link
+          height
+          rotation
+          width
+        }
+        promotion {
+          highlighted
+          top_ad
+          options
+          premium_ad_page
+          urgent
+          b2c_ad_page
+        }
+        protect_phone
+        shop {
+          subdomain
+        }
+        title
+        status
+        url
+        user {
+          id
+          uuid
+          _nodeId
+          about
+          b2c_business_page
+          banner_desktop
+          banner_mobile
+          company_name
+          created
+          is_online
+          last_seen
+          logo
+          logo_ad_page
+          name
+          other_ads_enabled
+          photo
+          seller_type
+          social_network_account_type
+        }
+        offer_type
+        params {
+          key
+          name
+          type
+          value {
+            __typename
+            ... on GenericParam {
+              key
+              label
+            }
+            ... on CheckboxesParam {
+              label
+              checkboxParamKey: key
+            }
+            ... on PriceParam {
+              value
+              type
+              previous_value
+              previous_label
+              negotiable
+              label
+              currency
+              converted_value
+              converted_previous_value
+              converted_currency
+              arranged
+              budget
+            }
+            ... on SalaryParam {
+              from
+              to
+              arranged
+              converted_currency
+              converted_from
+              converted_to
+              currency
+              gross
+              type
+            }
+            ... on ErrorParam {
+              message
+            }
+          }
+        }
+        _nodeId
+        description
+        external_url
+        key_params
+        partner {
+          code
+        }
+        map {
+          lat
+          lon
+          radius
+          show_detailed
+          zoom
+        }
+        safedeal {
+          allowed_quantity
+          weight_grams
+        }
+        valid_to_time
+      }
+      metadata {
+        filter_suggestions {
+          category
+          label
+          name
+          type
+          unit
+          values {
+            label
+            value
+          }
+          constraints {
+            type
+          }
+          search_label
+          option {
+            ranges
+            order
+            orderForSearch
+            fakeCategory
+          }
+        }
+        x_request_id
+        search_id
+        total_elements
+        visible_total_count
+        source
+        search_suggestion {
+          url
+          type
+          changes {
+            category_id
+            city_id
+            distance
+            district_id
+            query
+            region_id
+            strategy
+            excluded_category_id
+          }
+        }
+        facets {
+          category {
+            id
+            count
+            label
+            url
+          }
+          category_id_1 {
+            count
+            id
+            label
+            url
+          }
+          category_id_2 {
+            count
+            id
+            label
+            url
+          }
+          category_without_exclusions {
+            count
+            id
+            label
+            url
+          }
+          category_id_3_without_exclusions {
+            id
+            count
+            label
+            url
+          }
+          city {
+            count
+            id
+            label
+            url
+          }
+          district {
+            count
+            id
+            label
+            url
+          }
+          owner_type {
+            count
+            id
+            label
+            url
+          }
+          region {
+            id
+            count
+            label
+            url
+          }
+          scope {
+            id
+            count
+            label
+            url
+          }
+        }
+        new
+        promoted
+      }
+      links {
+        first {
+          href
+        }
+        next {
+          href
+        }
+        previous {
+          href
+        }
+        self {
+          href
+        }
+      }
+    }
+    ... on ListingError {
+      __typename
+      error {
+        code
+        detail
+        status
+        title
+        validation {
+          detail
+          field
+          title
+        }
+      }
+    }
+  }
+}
+"""
 
 payload = json.dumps({
-  "query": "query ListingSearchQuery(\n  $searchParameters: [SearchParameter!] = {key: \"\", value: \"\"}\n) {\n  clientCompatibleListings(searchParameters: $searchParameters) {\n    __typename\n    ... on ListingSuccess {\n      __typename\n      data {\n        id\n        location {\n          city {\n            id\n            name\n            normalized_name\n            _nodeId\n          }\n          district {\n            id\n            name\n            normalized_name\n            _nodeId\n          }\n          region {\n            id\n            name\n            normalized_name\n            _nodeId\n          }\n        }\n        last_refresh_time\n        delivery {\n          rock {\n            active\n            mode\n            offer_id\n          }\n        }\n        created_time\n        category {\n          id\n          type\n          _nodeId\n        }\n        contact {\n          courier\n          chat\n          name\n          negotiation\n          phone\n        }\n        business\n        omnibus_pushup_time\n        photos {\n          link\n          height\n          rotation\n          width\n        }\n        promotion {\n          highlighted\n          top_ad\n          options\n          premium_ad_page\n          urgent\n          b2c_ad_page\n        }\n        protect_phone\n        shop {\n          subdomain\n        }\n        title\n        status\n        url\n        user {\n          id\n          uuid\n          _nodeId\n          about\n          b2c_business_page\n          banner_desktop\n          banner_mobile\n          company_name\n          created\n          is_online\n          last_seen\n          logo\n          logo_ad_page\n          name\n          other_ads_enabled\n          photo\n          seller_type\n          social_network_account_type\n        }\n        offer_type\n        params {\n          key\n          name\n          type\n          value {\n            __typename\n            ... on GenericParam {\n              key\n              label\n            }\n            ... on CheckboxesParam {\n              label\n              checkboxParamKey: key\n            }\n            ... on PriceParam {\n              value\n              type\n              previous_value\n              previous_label\n              negotiable\n              label\n              currency\n              converted_value\n              converted_previous_value\n              converted_currency\n              arranged\n              budget\n            }\n            ... on SalaryParam {\n              from\n              to\n              arranged\n              converted_currency\n              converted_from\n              converted_to\n              currency\n              gross\n              type\n            }\n            ... on ErrorParam {\n              message\n            }\n          }\n        }\n        _nodeId\n        description\n        external_url\n        key_params\n        partner {\n          code\n        }\n        map {\n          lat\n          lon\n          radius\n          show_detailed\n          zoom\n        }\n        safedeal {\n          allowed_quantity\n          weight_grams\n        }\n        valid_to_time\n      }\n      metadata {\n        filter_suggestions {\n          category\n          label\n          name\n          type\n          unit\n          values {\n            label\n            value\n          }\n          constraints {\n            type\n          }\n          search_label\n          option {\n            ranges\n            order\n            orderForSearch\n            fakeCategory\n          }\n        }\n        x_request_id\n        search_id\n        total_elements\n        visible_total_count\n        source\n        search_suggestion {\n          url\n          type\n          changes {\n            category_id\n            city_id\n            distance\n            district_id\n            query\n            region_id\n            strategy\n            excluded_category_id\n          }\n        }\n        facets {\n          category {\n            id\n            count\n            label\n            url\n          }\n          category_id_1 {\n            count\n            id\n            label\n            url\n          }\n          category_id_2 {\n            count\n            id\n            label\n            url\n          }\n          category_without_exclusions {\n            count\n            id\n            label\n            url\n          }\n          category_id_3_without_exclusions {\n            id\n            count\n            label\n            url\n          }\n          city {\n            count\n            id\n            label\n            url\n          }\n          district {\n            count\n            id\n            label\n            url\n          }\n          owner_type {\n            count\n            id\n            label\n            url\n          }\n          region {\n            id\n            count\n            label\n            url\n          }\n          scope {\n            id\n            count\n            label\n            url\n          }\n        }\n        new\n        promoted\n      }\n      links {\n        first {\n          href\n        }\n        next {\n          href\n        }\n        previous {\n          href\n        }\n        self {\n          href\n        }\n      }\n    }\n    ... on ListingError {\n      __typename\n      error {\n        code\n        detail\n        status\n        title\n        validation {\n          detail\n          field\n          title\n        }\n      }\n    }\n  }\n}\n",
+  "query": query,
   "variables": {
     "searchParameters": [
       {
@@ -94,25 +403,9 @@ payload = json.dumps({
     ]
   }
 })
-headers = {
-  'Cookie': 'PHPSESSID=p27bgldl1phjn3oa1a7dn7fsji',
-  'Content-Type': 'application/json',
-  'accept-language': 'uk',
-  'authorization': 'Bearer eyJraWQiOiI3TzI5clpiaDVHXC9SR3NTZ2g2ZzZRN1QrMVJZdTdsWFwvXC9qd3dyWnozVjNzPSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiIyMGZkNDljNi1hZDBiLTRiMjItOGYzZC05NWUyYjZmYjI2OTgiLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAuZXUtd2VzdC0xLmFtYXpvbmF3cy5jb21cL2V1LXdlc3QtMV9WMkFKVVgwWEUiLCJjbGllbnRfaWQiOiIzMDlsc2doMGRlaXJsbzJsYTlrbXJtaGUzdiIsIm9yaWdpbl9qdGkiOiJjYzBkNzM4ZC03NDZkLTQyOWYtYTg3ZC01YTlhNWRhMGJmMDAiLCJldmVudF9pZCI6IjE0YTU2MjA3LWVhYmMtNGRjYy1hNDRiLWNhMGY2ZDU3YmM1NCIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoiYXdzLmNvZ25pdG8uc2lnbmluLnVzZXIuYWRtaW4iLCJhdXRoX3RpbWUiOjE3NjI2MzcxNzUsImV4cCI6MTc2MjYzODk1NSwiaWF0IjoxNzYyNjM4MDU1LCJqdGkiOiJkMWFlNDJmYy0zZjk3LTQ1NDYtYmM3NS00NmI5YWU0OTZkZWYiLCJ1c2VybmFtZSI6IjU1NTljMDU5LWMyYzItNDUzMS04MzQxLWEwZGNhNjI1ZDRlNyJ9.PRL5aOyPN1w-9DDmLidXegulTHCQ5YeHki0wf2TEtxn41ZPcnXR6szZIg05cuoFEHcIBqAlEQ6KLKbEnhWCx5s8uPdl-p6HkS-i1-BUXPqjhJ7fg5C7aInCryI8qqqc1PIrB0Qz1TN2gIonvr3yHi2jsZTtj-4U_tO-WFu-PzVJT0wRK7fmRpyBLsAPicC6nqeqz0a2TwYlWtD5ErMiMv3ePIz_NqPyqwN1aT-sHJqwQZss3j1F3NZSAk7J_tTQtS2ii-r-ZXPmW1nFYZ8vF-s507AVo50twfmdIeV0Mm3y7Tvy93Ht_kI8h5RZBTrywcSitih689v3C8xqtqIfuXw',
-  'content-type': 'application/json',
-  'origin': 'https://www.olx.ua',
-  'priority': 'u=1, i',
-  'referer': 'https://www.olx.ua/uk/nedvizhimost/kvartiry/dolgosrochnaya-arenda-kvartir/dnepr/q-%D0%BA%D0%B2%D0%B0%D1%80%D1%82%D0%B8%D1%80%D0%B0-%D0%BE%D1%80%D0%B5%D0%BD%D0%B4%D0%B0/?currency=UAH&search%5Bprivate_business%5D=private&search%5Border%5D=created_at:desc&search%5Bfilter_float_price:from%5D=10000&search%5Bfilter_float_price:to%5D=15000&search%5Bfilter_float_floor:from%5D=2&search%5Bfilter_float_total_floors:from%5D=2&search%5Bfilter_float_total_area:from%5D=30&search%5Bfilter_float_total_area:to%5D=60&search%5Bfilter_enum_furnish%5D%5B0%5D=yes&search%5Bfilter_enum_number_of_rooms_string%5D%5B0%5D=dvuhkomnatnye&search%5Bfilter_enum_number_of_rooms_string%5D%5B1%5D=odnokomnatnye',
-  'sec-ch-ua': '"Chromium";v="142", "Google Chrome";v="142", "Not_A Brand";v="99"',
-  'sec-ch-ua-mobile': '?0',
-  'sec-ch-ua-platform': '"Windows"',
-  'sec-fetch-dest': 'empty',
-  'sec-fetch-mode': 'cors',
-  'sec-fetch-site': 'same-origin',
-  'x-client': 'DESKTOP'
-}
 
 response = requests.request("POST", url, headers=headers, data=payload)
 
-# print(response.text)
-with open
+# logger.info(response.text)
+with open(f"{cache_dir}/search_output.json", "w", encoding="utf-8") as f:
+    json.dump(response.json(), f, ensure_ascii=False, indent=4)
